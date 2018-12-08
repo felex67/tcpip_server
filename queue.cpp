@@ -1,18 +1,16 @@
 #include <cstdio>
 #include <iostream>
 #include <thread>
-#include "headers/queue.h"
-#include "headers/msptr.h"
+#include "headers/tslist.h"
 
 typedef ftwd::list<char> msgQueue;
-typedef msptr<msgQueue> pMsgQueue;
 
 msgQueue queue;
 
 void reader(msgQueue* ListPtr) {
     char* msg;
     while(true) {
-        msg = ListPtr->shift();
+        msg = ListPtr->pop();
         if(msg != nullptr) {
             std::cout << msg << "\n";
             delete[] msg;
@@ -30,7 +28,7 @@ void write(const char* msg) {
         entry[i] = msg[i];
     }
     entry[len - 1] = 0;
-    queue.push(entry);
+    queue.unshift(entry);
 }
 
 char* rndString() {
