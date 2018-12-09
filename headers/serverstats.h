@@ -29,6 +29,10 @@ namespace ftwd {
         list<Client*> Clients;
         list<packet*> packetsOut;
         list<packet*> packetsIn;
+        list<char*> ConsMsg;
+        list<char*> UserCmd;
+
+        
     };
 };
 
