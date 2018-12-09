@@ -5,6 +5,7 @@
  * @author: felexxx67@gmail.com
 */
 #include <sys/types.h>
+#include <mutex>
 
 namespace ftwd {
     template <typename T>
@@ -14,13 +15,11 @@ namespace ftwd {
             pair* pNext;
             pair* pPrev;
             T* ptr;
-            char _lock;
 
             pair(pair* prev, pair* next, T* _ptr)
                 : pNext(prev)
                 , pPrev(next)
                 , ptr(_ptr)
-                , _lock(true)
             {}
             ~pair() {}
         };
@@ -28,7 +27,7 @@ namespace ftwd {
         pair* pFirst;
         pair* pLast;
         size_t iSize;
-        char _lock;
+        std::mutex _lock;
 
         static const size_t limit = 10000;
         
@@ -37,45 +36,41 @@ namespace ftwd {
             : pFirst(nullptr)
             , pLast(nullptr)
             , iSize(0)
-            , _lock(true)
         {
-            _lock = false;
+            _lock.unlock();
         }
         list(const list &other);
         ~list() {
-            while(_lock);
-            _lock = true;
+            _lock.lock();
             while(pFirst != nullptr) {
                 pair* ptr = pFirst;
                 pFirst = ptr->pNext;
                 delete ptr;
             }
+            _lock.unlock();
         }
         void push(T* ptr) {
-            while(_lock);
-            _lock = true;
+            _lock.lock();
             if(iSize < limit) {
                 pair* newPair = new pair(pLast, nullptr, ptr);
                 (pLast ? (pLast->pNext = newPair) : (pFirst = newPair));
                 pLast = newPair;
                 ++iSize;
             }
-            _lock = false;
+            _lock.unlock();
         }
         void unshift(T* ptr) {
-            while(_lock);
-            _lock = true;
+            _lock.lock();
             if(iSize < limit) {
                 pair* newPair = new pair(nullptr, pFirst, ptr);
                 (pFirst ? (pFirst->pPrev = newPair) : (pLast = newPair));
                 pFirst = newPair;
                 ++iSize;
             }
-            _lock = false;
+            _lock.unlock();
         }
         T* pop() {
-            while(_lock);
-            _lock = true;
+            _lock.lock();
             T* res = nullptr;
             if(iSize) {
                 pair* ptr = pLast;
@@ -90,12 +85,11 @@ namespace ftwd {
             else {
                 pFirst = nullptr;
             }
-            _lock = false;
+            _lock.unlock();
             return res;
         }
         T* shift() {
-            while(_lock);
-            _lock =  true;
+            _lock.lock();
             T* res = nullptr;
             if(iSize) {
                 pair* ptr = pFirst;
@@ -106,14 +100,13 @@ namespace ftwd {
                 (pFirst ? : pLast = nullptr);
                 --iSize;
             }
-            _lock = false;
+            _lock.unlock();
             return res;
         }
         const size_t size() {
-            while(_lock);
-            _lock = true;
+            _lock.lock();
             return iSize;
-            _lock = false;
+            _lock.unlock();
         }
     };
 };
