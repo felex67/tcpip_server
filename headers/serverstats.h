@@ -31,7 +31,6 @@ namespace ftwd {
         list<packet*> packetsIn;
         list<char*> ConsMsg;
         list<char*> UserCmd;
-
         
     };
 };
