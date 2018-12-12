@@ -15,6 +15,7 @@
  * @version: 1.0
  * @author: felexxx67@gmail.com
 */
+class ServerCore;
 namespace ftwd {
     struct ServerGlobals {
         enum thrFlags {

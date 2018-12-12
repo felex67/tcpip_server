@@ -10,7 +10,7 @@
 #include <thread>
 #include <fstream>
 #include <sstream>
-
+#include "querries.hpp"
 
 class PGConnection {
 

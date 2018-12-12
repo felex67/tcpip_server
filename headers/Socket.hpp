@@ -2,7 +2,6 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-
 namespace ftwd {
     class Socket {
         typedef unsigned char byte;
@@ -30,6 +29,8 @@ namespace ftwd {
             while(*_data);
             *_data = true;
             if(!(--(*(size_t*)(_data + cntrOff)))) {
+                int flags = fcntl(*(int*)(_data + fdOff), F_GETFD);
+                fcntl(*(int*)(_data + fdOff), F_SETFD, flags ^ O_NONBLOCK);
                 close(*(int*)(_data + fdOff));
                 delete[] _data;
             }
