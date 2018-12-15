@@ -1,5 +1,6 @@
-#ifndef _serverstats_h_
-#define _serverstats_h_
+#pragma once
+#ifndef _ServerGlobalData_h_
+#define _ServerGlobalData_h_
 
 #include <sys/types.h>
 #include <sys/io.h>
@@ -7,15 +8,15 @@
 #include <netinet/in.h>
 #include <iostream>
 
-#include "tslist.h"
-#include "client.h"
-#include "packet.h"
+#include "tslist.hpp"
+#include "client.hpp"
+#include "packet.hpp"
 
 /**
  * @version: 1.0
  * @author: felexxx67@gmail.com
 */
-class ServerCore;
+//class ServerCore;
 namespace ftwd {
     struct ServerGlobals {
         enum thrFlags {
@@ -36,4 +37,4 @@ namespace ftwd {
     };
 };
 
-#endif //!_serverstats_h_
+#endif //!_ServerGlobalData_h_

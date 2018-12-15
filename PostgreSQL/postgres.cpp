@@ -1,5 +1,3 @@
-#define __cplusplus11
-
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -20,7 +18,6 @@ public:
 
 private:
     void establish_connection();
-
     const std::string m_dbhost = "localhost";
     const int         m_dbport = 5432;
     const std::string m_dbname = "demo";

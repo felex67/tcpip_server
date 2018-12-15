@@ -1,37 +1,81 @@
 #include <unistd.h>
+#include <cstddef>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <fcntl.h>
+#include <mutex>
+#include "errors.hpp"
 
-namespace ftwd {
+namespace ftwd {    
     class Socket {
-        typedef unsigned char byte;
-
-        static const byte flagOff = 0;
-        static const byte cntrOff = 1;
-        static const byte fdOff = cntrOff + sizeof(size_t);
-        static const byte arrSize = cntrOff + sizeof(int) + sizeof(size_t);
+        /* helpers */
+        struct _flags {
+            int onCreate;
+            int Current;
+        };
+        struct _SockInfo {
+            _flags flags;
+            int SockFD;
+            size_t Reffs;
+            sockaddr_in6 SockAddr;
+        };
+        /*-----------------*/
+        //Указатель на динамическую память
+        _SockInfo* sockdata;
         
-        byte* _data;
-
-        public:
+        void _clear() {
+            if(sockdata) {
+                if(--(sockdata->Reffs)) {
+                    sockdata = nullptr;
+                }
+                else {
+                    fcntl(sockdata->SockFD, F_SETFD, sockdata->flags.onCreate);
+                    close(sockdata->SockFD);
+                    delete sockdata;
+                }
+            }
+        }
+        ushort is_nonblock() {
+            if(sockdata)
+                return ((sockdata->flags.Current & O_NONBLOCK) == O_NONBLOCK);
+            return false;
+        }
+        bool set_nonblock() {
+            if(sockdata) {
+                if((sockdata->flags.Current & O_NONBLOCK) != O_NONBLOCK) {
+                    sockdata->flags.Current = fcntl(sockdata->SockFD, F_GETFD, O_NONBLOCK);
+                }
+            }
+            
+        }
+        void set_block() {
+            if(sockdata) {
+                if((sockdata->flags.Current & O_NONBLOCK) == O_NONBLOCK) {
+                    sockdata->flags.Current = fcntl(sockdata->SockFD, F_SETFD, sockdata->flags.onCreate);
+                }
+            }
+        }
+    public:
 
         Socket(int fd)
             : _data(nullptr)
         {
             _data = new byte[arrSize];
             *_data = true;
-            *(size_t*)(_data + cntrOff) = 1;
-            fcntl(fd, F_SETFD, O_NONBLOCK);
-            *(int*)(_data + fdOff) = fd;
+            *(size_t*)(_data + CounterOffset) = 1;
+            *(int*)(_data + DescriptorOffset) = fd;
             *_data = false;
         }
         ~Socket() {
             while(*_data);
             *_data = true;
-            if(!(--(*(size_t*)(_data + cntrOff)))) {
-                int flags = fcntl(*(int*)(_data + fdOff), F_GETFD);
-                fcntl(*(int*)(_data + fdOff), F_SETFD, flags ^ O_NONBLOCK);
-                close(*(int*)(_data + fdOff));
+            if(!(--(*(size_t*)(_data + CounterOffset)))) {
+                int flags = fcntl(*(int*)(_data + DescriptorOffset), F_GETFD);
+                int fd = *(int*)(_data + DescriptorOffset);
+                if(fd) {
+                    fcntl(*(int*)(_data + DescriptorOffset), F_SETFD, flags ^ O_NONBLOCK);
+                    close(*(int*)(_data + DescriptorOffset));
+                }
                 delete[] _data;
             }
         }
@@ -41,9 +85,23 @@ namespace ftwd {
             while(*(other._data));
             *(other._data) = true;
             _data = other._data;
-            ++(*(size_t*)(_data + cntrOff));
+            ++(*(size_t*)(_data + CounterOffset));
             *_data = false;
         }
-
+        operator const int() const {
+            return *(int*)(_data + DescriptorOffset);
+        };
+        operator int&() {
+            return *(int*)(_data + DescriptorOffset);
+        }
+        int getFD() const {
+            return *(int*)(_data + DescriptorOffset);
+        }
+        int& getFD() {
+            return *(int*)(_data + DescriptorOffset);
+        }
+        operator const bool() const {
+            return (*(int*)(_data + DescriptorOffset) > 0);
+        }
     };
 };
